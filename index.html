@@ -1,0 +1,893 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Fundable Are You? | Startup Fundability Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+        }
+        
+        .calculator-container {
+            max-width: 800px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            transition: width 0.4s ease;
+        }
+        
+        .option-card {
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        
+        .option-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .option-card.selected {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+        
+        .btn-primary {
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+        }
+        
+        .score-badge {
+            height: 150px;
+            width: 150px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .category-score {
+            transition: width 1s ease-out;
+        }
+        
+        .result-appear {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="calculator-container mx-auto bg-white">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 md:p-8">
+            <h1 class="text-2xl md:text-3xl font-bold text-white">How Fundable Are You?</h1>
+            <p class="text-blue-100 mt-2">Assess your startup's investor readiness with our fundability calculator</p>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="bg-gray-100 h-2">
+            <div id="progressBar" class="progress-bar bg-blue-500 w-0"></div>
+        </div>
+        
+        <!-- Welcome Screen -->
+        <div id="welcomeScreen" class="p-6 md:p-8">
+            <div class="bg-blue-50 p-6 rounded-lg border border-blue-100 mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-3">Ready to assess your startup's fundability?</h2>
+                <p class="text-gray-600 mb-4">Answer 15 questions across 5 key investor-focused categories to receive your fundability score and personalized feedback.</p>
+                <div class="flex flex-wrap gap-4">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                        <span class="text-sm text-gray-700">Team & Founder History</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-indigo-500 mr-2"></div>
+                        <span class="text-sm text-gray-700">Market Opportunity</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-purple-500 mr-2"></div>
+                        <span class="text-sm text-gray-700">Traction & Revenue</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                        <span class="text-sm text-gray-700">Financials & Burn</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
+                        <span class="text-sm text-gray-700">Fundraising Readiness</span>
+                    </div>
+                </div>
+            </div>
+            <button id="startBtn" class="btn-primary bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg w-full md:w-auto">
+                Start Assessment
+            </button>
+        </div>
+        
+        <!-- Questions Container -->
+        <div id="questionsContainer" class="p-6 md:p-8 hidden">
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center">
+                        <div id="categoryIndicator" class="w-4 h-4 rounded-full bg-blue-500 mr-2"></div>
+                        <h3 id="categoryTitle" class="font-medium text-gray-700">Team & Founder History</h3>
+                    </div>
+                    <span id="questionCounter" class="text-sm text-gray-500">Question 1 of 15</span>
+                </div>
+                <h2 id="questionText" class="text-xl font-semibold text-gray-800 mb-4">How much revenue are you currently generating per month?</h2>
+            </div>
+            
+            <div id="optionsContainer" class="space-y-3 mb-8">
+                <!-- Options will be inserted here by JavaScript -->
+            </div>
+            
+            <div class="flex justify-between">
+                <button id="prevBtn" class="btn-secondary text-gray-600 font-medium py-2 px-5 rounded-lg border border-gray-300 hover:bg-gray-50 hidden">
+                    Previous
+                </button>
+                <div class="flex-grow"></div>
+                <button id="nextBtn" class="btn-primary bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg">
+                    Next Question
+                </button>
+            </div>
+        </div>
+        
+        <!-- Email Collection (Optional) -->
+        <div id="emailScreen" class="p-6 md:p-8 hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-2">Your assessment is complete!</h2>
+            <p class="text-gray-600 mb-6">Would you like to receive a detailed PDF report of your fundability score?</p>
+            
+            <div class="bg-blue-50 p-5 rounded-lg border border-blue-100 mb-6">
+                <div class="mb-4">
+                    <label for="emailInput" class="block text-sm font-medium text-gray-700 mb-1">Email Address (Optional)</label>
+                    <input type="email" id="emailInput" placeholder="your@email.com" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                </div>
+                <div class="flex items-start mb-2">
+                    <input id="marketingConsent" type="checkbox" class="mt-1 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                    <label for="marketingConsent" class="ml-2 text-sm text-gray-600">I agree to receive occasional fundraising tips and resources (you can unsubscribe anytime)</label>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button id="skipEmailBtn" class="btn-secondary text-gray-600 font-medium py-3 px-6 rounded-lg border border-gray-300 hover:bg-gray-50">
+                    Skip & See Results
+                </button>
+                <button id="submitEmailBtn" class="btn-primary bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
+                    Submit & See Results
+                </button>
+            </div>
+        </div>
+        
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 md:p-8 text-center">
+                <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">Your Fundability Results</h2>
+                <p class="text-blue-100">Based on your responses across all 5 key investor categories</p>
+            </div>
+            
+            <div class="p-6 md:p-8">
+                <!-- Score Badge -->
+                <div class="flex justify-center mb-8">
+                    <div id="scoreBadge" class="score-badge bg-white border-4 border-blue-500">
+                        <span id="scoreValue" class="text-4xl font-bold text-blue-600">85</span>
+                        <span class="text-sm text-gray-500">out of 100</span>
+                    </div>
+                </div>
+                
+                <!-- Result Headline -->
+                <div class="text-center mb-8 result-appear" style="animation-delay: 0.2s;">
+                    <h3 id="resultHeadline" class="text-2xl font-bold text-gray-800 mb-3">You're Fundable Now!</h3>
+                    <p id="resultSummary" class="text-gray-600 max-w-2xl mx-auto">Your startup shows strong investor readiness across most key metrics. With your current traction and team, you're well-positioned to attract venture capital.</p>
+                </div>
+                
+                <!-- Category Breakdown -->
+                <div class="mb-8 result-appear" style="animation-delay: 0.4s;">
+                    <h4 class="text-lg font-semibold text-gray-700 mb-4">Category Breakdown</h4>
+                    <div class="space-y-4">
+                        <div id="categoryScores">
+                            <!-- Category scores will be inserted here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Key Insights -->
+                <div class="mb-8 result-appear" style="animation-delay: 0.6s;">
+                    <h4 class="text-lg font-semibold text-gray-700 mb-4">Key Insights</h4>
+                    <div id="keyInsights" class="space-y-3">
+                        <!-- Insights will be inserted here by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Share Results -->
+                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 mb-6 result-appear" style="animation-delay: 0.8s;">
+                    <h4 class="text-lg font-semibold text-gray-700 mb-3">Share Your Results</h4>
+                    <div class="flex flex-wrap gap-3">
+                        <button class="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                            </svg>
+                            Twitter
+                        </button>
+                        <button class="flex items-center bg-blue-800 text-white px-4 py-2 rounded-lg hover:bg-blue-900">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                            </svg>
+                            LinkedIn
+                        </button>
+                        <button class="flex items-center bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            Copy Link
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Next Steps -->
+                <div class="text-center mt-8 result-appear" style="animation-delay: 1s;">
+                    <button id="restartBtn" class="btn-primary bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
+                        Retake Assessment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Questions Data Structure
+        const questions = [
+            // Category 1: Team & Founder History
+            {
+                category: "Team & Founder History",
+                categoryColor: "bg-blue-500",
+                questions: [
+                    {
+                        text: "What is your founding team's background?",
+                        options: [
+                            { text: "First-time founders with no industry experience", score: 0 },
+                            { text: "First-time founders with relevant industry experience", score: 3 },
+                            { text: "Serial founders with at least one previous startup", score: 7 },
+                            { text: "Serial founders with previous successful exits", score: 10 }
+                        ]
+                    },
+                    {
+                        text: "How complete is your founding team?",
+                        options: [
+                            { text: "Solo founder with no advisors", score: 0 },
+                            { text: "Solo founder with strong advisors", score: 3 },
+                            { text: "2-3 co-founders covering most key roles", score: 7 },
+                            { text: "Complete team with all key roles filled (technical, business, domain expertise)", score: 10 }
+                        ]
+                    },
+                    {
+                        text: "What is your team's technical capability?",
+                        options: [
+                            { text: "No technical co-founder or in-house development", score: 0 },
+                            { text: "Outsourced development with technical oversight", score: 3 },
+                            { text: "Technical co-founder with moderate experience", score: 7 },
+                            { text: "Strong technical team with proven expertise", score: 10 }
+                        ]
+                    }
+                ]
+            },
+            
+            // Category 2: Market Opportunity
+            {
+                category: "Market Opportunity",
+                categoryColor: "bg-indigo-500",
+                questions: [
+                    {
+                        text: "What is your total addressable market (TAM) size?",
+                        options: [
+                            { text: "Less than $100M", score: 0 },
+                            { text: "$100M - $1B", score: 3 },
+                            { text: "$1B - $10B", score: 7 },
+                            { text: "Over $10B", score: 10 }
+                        ]
+                    },
+                    {
+                        text: "How would you characterize your market growth?",
+                        options: [
+                            { text: "Stable or declining market", score: 0 },
+                            { text: "Growing at 5-10% annually", score: 3 },
+                            { text: "Growing at 10-25% annually", score: 7 },
+                            { text: "Growing at 25%+ annually", score: 10 }
+                        ]
+                    },
+                    {
+                        text: "How strong is your competitive advantage?",
+                        options: [
+                            { text: "No clear differentiation from competitors", score: 0 },
+                            { text: "Some unique features but easily replicable", score: 3 },
+                            { text: "Strong differentiation with some barriers to entry", score: 7 },
+                            { text: "Proprietary technology, patents, or network effects", score: 10 }
+                        ]
+                    }
+                ]
+            },
+            
+            // Category 3: Traction & Revenue
+            {
+                category: "Traction & Revenue",
+                categoryColor: "bg-purple-500",
+                questions: [
+                    {
+                        text: "How much revenue are you currently generating per month?",
+                        options: [
+                            { text: "$0", score: 0 },
+                            { text: "Less than $5K", score: 2 },
+                            { text: "$5K - $50K", score: 5 },
+                            { text: "$50K - $200K", score: 8 },
+                            { text: "$200K+", score: 10 }
+                        ]
+                    },
+                    {
+                        text: "What is your monthly growth rate?",
+                        options: [
+                            { text: "No growth or pre-revenue", score: 0 },
+                            { text: "1-5% monthly growth", score: 3 },
+                            { text: "5-15% monthly growth", score: 7 },
+                            { text: "15%+ monthly growth", score: 10 }
+                        ]
+                    },
+                    {
+                        text: "How engaged are your users/customers?",
+                        options: [
+                            { text: "No active users or high churn", score: 0 },
+                            { text: "Average engagement metrics for your industry", score: 3 },
+                            { text: "Above-average retention and engagement", score: 7 },
+                            { text: "Industry-leading engagement and retention metrics", score: 10 }
+                        ]
+                    }
+                ]
+            },
+            
+            // Category 4: Financials & Burn
+            {
+                category: "Financials & Burn",
+                categoryColor: "bg-green-500",
+                questions: [
+                    {
+                        text: "How much runway do you have?",
+                        options: [
+                            { text: "Less than 3 months", score: 0 },
+                            { text: "3-6 months", score: 3 },
+                            { text: "6-12 months", score: 7 },
+                            { text: "12+ months", score: 10 }
+                        ]
+                    },
+                    {
+                        text: "What is your unit economics status?",
+                        options: [
+                            { text: "Negative unit economics with no clear path to profitability", score: 0 },
+                            { text: "Negative unit economics with clear path to profitability", score: 3 },
+                            { text: "Break-even unit economics", score: 7 },
+                            { text: "Positive unit economics", score: 10 }
+                        ]
+                    },
+                    {
+                        text: "How detailed are your financial projections?",
+                        options: [
+                            { text: "No formal financial projections", score: 0 },
+                            { text: "Basic projections with limited assumptions", score: 3 },
+                            { text: "Detailed projections with clear assumptions", score: 7 },
+                            { text: "Comprehensive financial model with sensitivity analysis", score: 10 }
+                        ]
+                    }
+                ]
+            },
+            
+            // Category 5: Fundraising Readiness
+            {
+                category: "Fundraising Readiness",
+                categoryColor: "bg-yellow-500",
+                questions: [
+                    {
+                        text: "How much capital are you seeking to raise?",
+                        options: [
+                            { text: "Less than $100K", score: 2 },
+                            { text: "$100K - $500K", score: 5 },
+                            { text: "$500K - $2M", score: 7 },
+                            { text: "$2M+", score: 10 }
+                        ]
+                    },
+                    {
+                        text: "How developed is your investor pitch?",
+                        options: [
+                            { text: "No formal pitch deck", score: 0 },
+                            { text: "Basic pitch deck with key elements", score: 3 },
+                            { text: "Comprehensive pitch deck with supporting materials", score: 7 },
+                            { text: "Refined pitch with customer testimonials and traction metrics", score: 10 }
+                        ]
+                    },
+                    {
+                        text: "What investor connections do you have?",
+                        options: [
+                            { text: "No investor connections", score: 0 },
+                            { text: "Some connections but no warm intros", score: 3 },
+                            { text: "Several warm intros to relevant investors", score: 7 },
+                            { text: "Strong investor network with committed interest", score: 10 }
+                        ]
+                    }
+                ]
+            }
+        ];
+        
+        // State variables
+        let currentCategoryIndex = 0;
+        let currentQuestionIndex = 0;
+        let answers = [];
+        let totalQuestions = 0;
+        
+        // Calculate total questions
+        questions.forEach(category => {
+            totalQuestions += category.questions.length;
+        });
+        
+        // DOM Elements
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const questionsContainer = document.getElementById('questionsContainer');
+        const emailScreen = document.getElementById('emailScreen');
+        const resultsScreen = document.getElementById('resultsScreen');
+        const progressBar = document.getElementById('progressBar');
+        const categoryIndicator = document.getElementById('categoryIndicator');
+        const categoryTitle = document.getElementById('categoryTitle');
+        const questionCounter = document.getElementById('questionCounter');
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        // Initialize the calculator
+        document.getElementById('startBtn').addEventListener('click', startAssessment);
+        document.getElementById('prevBtn').addEventListener('click', showPreviousQuestion);
+        document.getElementById('nextBtn').addEventListener('click', handleNextButtonClick);
+        document.getElementById('skipEmailBtn').addEventListener('click', showResults);
+        document.getElementById('submitEmailBtn').addEventListener('click', handleEmailSubmit);
+        document.getElementById('restartBtn').addEventListener('click', restartAssessment);
+        
+        function startAssessment() {
+            welcomeScreen.classList.add('hidden');
+            questionsContainer.classList.remove('hidden');
+            showCurrentQuestion();
+        }
+        
+        function showCurrentQuestion() {
+            const currentCategory = questions[currentCategoryIndex];
+            const currentQuestion = currentCategory.questions[currentQuestionIndex];
+            
+            // Update category indicator and title
+            categoryIndicator.className = `w-4 h-4 rounded-full ${currentCategory.categoryColor} mr-2`;
+            categoryTitle.textContent = currentCategory.category;
+            
+            // Calculate overall question number
+            let overallQuestionNumber = 1;
+            for (let i = 0; i < currentCategoryIndex; i++) {
+                overallQuestionNumber += questions[i].questions.length;
+            }
+            overallQuestionNumber += currentQuestionIndex;
+            
+            // Update question counter
+            questionCounter.textContent = `Question ${overallQuestionNumber} of ${totalQuestions}`;
+            
+            // Update question text
+            questionText.textContent = currentQuestion.text;
+            
+            // Clear and populate options
+            optionsContainer.innerHTML = '';
+            currentQuestion.options.forEach((option, index) => {
+                const optionCard = document.createElement('div');
+                optionCard.className = 'option-card p-4 rounded-lg border border-gray-200 hover:border-blue-300 cursor-pointer';
+                
+                // Check if this option was previously selected
+                const flatIndex = getFlatQuestionIndex();
+                if (answers[flatIndex] !== undefined && answers[flatIndex].optionIndex === index) {
+                    optionCard.classList.add('selected');
+                }
+                
+                optionCard.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 h-5 w-5 border border-gray-300 rounded-full flex items-center justify-center ${answers[flatIndex] !== undefined && answers[flatIndex].optionIndex === index ? 'bg-blue-500 border-blue-500' : ''}">
+                            ${answers[flatIndex] !== undefined && answers[flatIndex].optionIndex === index ? '<div class="h-2 w-2 rounded-full bg-white"></div>' : ''}
+                        </div>
+                        <div class="ml-3">
+                            <span class="text-gray-800">${option.text}</span>
+                        </div>
+                    </div>
+                `;
+                
+                optionCard.addEventListener('click', () => {
+                    // Remove selected class from all options
+                    document.querySelectorAll('.option-card').forEach(card => {
+                        card.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked option
+                    optionCard.classList.add('selected');
+                    
+                    // Save answer
+                    answers[flatIndex] = {
+                        categoryIndex: currentCategoryIndex,
+                        questionIndex: currentQuestionIndex,
+                        optionIndex: index,
+                        score: option.score,
+                        maxScore: 10, // Assuming max score is 10 for all questions
+                        categoryName: currentCategory.category,
+                        questionText: currentQuestion.text,
+                        answerText: option.text
+                    };
+                    
+                    // Enable next button
+                    nextBtn.disabled = false;
+                });
+                
+                optionsContainer.appendChild(optionCard);
+            });
+            
+            // Update progress bar
+            updateProgressBar();
+            
+            // Show/hide previous button
+            if (currentCategoryIndex === 0 && currentQuestionIndex === 0) {
+                prevBtn.classList.add('hidden');
+            } else {
+                prevBtn.classList.remove('hidden');
+            }
+            
+            // Update next button text for last question
+            if (isLastQuestion()) {
+                nextBtn.textContent = 'Complete Assessment';
+            } else {
+                nextBtn.textContent = 'Next Question';
+            }
+        }
+        
+        function handleNextButtonClick() {
+            // Check if an option is selected
+            const flatIndex = getFlatQuestionIndex();
+            if (answers[flatIndex] === undefined) {
+                // No option selected, show error or prompt
+                alert('Please select an option to continue');
+                return;
+            }
+            
+            if (isLastQuestion()) {
+                showEmailScreen();
+            } else {
+                moveToNextQuestion();
+            }
+        }
+        
+        function moveToNextQuestion() {
+            // Move to next question
+            if (currentQuestionIndex < questions[currentCategoryIndex].questions.length - 1) {
+                currentQuestionIndex++;
+            } else {
+                currentCategoryIndex++;
+                currentQuestionIndex = 0;
+            }
+            
+            showCurrentQuestion();
+        }
+        
+        function showPreviousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+            } else if (currentCategoryIndex > 0) {
+                currentCategoryIndex--;
+                currentQuestionIndex = questions[currentCategoryIndex].questions.length - 1;
+            }
+            
+            showCurrentQuestion();
+        }
+        
+        function isLastQuestion() {
+            return (
+                currentCategoryIndex === questions.length - 1 &&
+                currentQuestionIndex === questions[currentCategoryIndex].questions.length - 1
+            );
+        }
+        
+        function getFlatQuestionIndex() {
+            let flatIndex = 0;
+            for (let i = 0; i < currentCategoryIndex; i++) {
+                flatIndex += questions[i].questions.length;
+            }
+            flatIndex += currentQuestionIndex;
+            return flatIndex;
+        }
+        
+        function updateProgressBar() {
+            const flatIndex = getFlatQuestionIndex();
+            const progress = ((flatIndex + 1) / totalQuestions) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+        
+        function showEmailScreen() {
+            questionsContainer.classList.add('hidden');
+            emailScreen.classList.remove('hidden');
+        }
+        
+        function handleEmailSubmit() {
+            const email = document.getElementById('emailInput').value;
+            const consent = document.getElementById('marketingConsent').checked;
+            
+            // Here you would typically send the email to your backend
+            // For high scores (80+), you might want to flag them for special attention
+            
+            const score = calculateScore();
+            if (score >= 80 && email) {
+                // This is where you would log high-score users to a webhook or CRM
+                console.log(`High score user: ${email}, Score: ${score}`);
+            }
+            
+            showResults();
+        }
+        
+        function showResults() {
+            emailScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            
+            // Calculate and display results
+            const score = calculateScore();
+            displayResults(score);
+        }
+        
+        function calculateScore() {
+            let totalScore = 0;
+            let totalMaxScore = 0;
+            
+            answers.forEach(answer => {
+                if (answer) {
+                    totalScore += answer.score;
+                    totalMaxScore += answer.maxScore;
+                }
+            });
+            
+            // Normalize to 100
+            return Math.round((totalScore / totalMaxScore) * 100);
+        }
+        
+        function calculateCategoryScores() {
+            const categoryScores = {};
+            
+            // Initialize category scores
+            questions.forEach(category => {
+                categoryScores[category.category] = {
+                    score: 0,
+                    maxScore: 0,
+                    color: category.categoryColor
+                };
+            });
+            
+            // Calculate scores by category
+            answers.forEach(answer => {
+                if (answer) {
+                    const category = answer.categoryName;
+                    categoryScores[category].score += answer.score;
+                    categoryScores[category].maxScore += answer.maxScore;
+                }
+            });
+            
+            // Calculate percentages
+            Object.keys(categoryScores).forEach(category => {
+                const { score, maxScore } = categoryScores[category];
+                categoryScores[category].percentage = Math.round((score / maxScore) * 100);
+            });
+            
+            return categoryScores;
+        }
+        
+        function displayResults(score) {
+            // Update score badge
+            document.getElementById('scoreValue').textContent = score;
+            
+            // Update result headline and summary
+            const resultHeadline = document.getElementById('resultHeadline');
+            const resultSummary = document.getElementById('resultSummary');
+            
+            let headlineText, summaryText;
+            let badgeColor;
+            
+            if (score >= 80) {
+                headlineText = "You're Fundable Now!";
+                summaryText = "Your startup shows strong investor readiness across most key metrics. With your current traction and team, you're well-positioned to attract venture capital.";
+                badgeColor = "border-green-500";
+            } else if (score >= 60) {
+                headlineText = "Close But Needs Work";
+                summaryText = "You're on the right track, but investors may have concerns about specific areas. Address your weak points to improve your chances of securing funding.";
+                badgeColor = "border-yellow-500";
+            } else if (score >= 40) {
+                headlineText = "Early Stage Potential";
+                summaryText = "Your startup shows promise but needs significant development before most investors would consider funding. Focus on building traction and strengthening your team.";
+                badgeColor = "border-orange-500";
+            } else {
+                headlineText = "Not Ready Yet";
+                summaryText = "Your startup needs substantial development before seeking venture funding. Consider bootstrapping or alternative funding sources while you build your foundation.";
+                badgeColor = "border-red-500";
+            }
+            
+            resultHeadline.textContent = headlineText;
+            resultSummary.textContent = summaryText;
+            
+            // Update score badge color
+            const scoreBadge = document.getElementById('scoreBadge');
+            scoreBadge.className = `score-badge bg-white border-4 ${badgeColor}`;
+            
+            // Display category scores
+            const categoryScores = calculateCategoryScores();
+            const categoryScoresContainer = document.getElementById('categoryScores');
+            categoryScoresContainer.innerHTML = '';
+            
+            Object.keys(categoryScores).forEach(category => {
+                const { percentage, color } = categoryScores[category];
+                
+                const categoryScoreElement = document.createElement('div');
+                categoryScoreElement.className = 'mb-3';
+                categoryScoreElement.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-sm font-medium text-gray-700">${category}</span>
+                        <span class="text-sm font-medium text-gray-700">${percentage}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="category-score h-2.5 rounded-full ${color}" style="width: ${percentage}%"></div>
+                    </div>
+                `;
+                
+                categoryScoresContainer.appendChild(categoryScoreElement);
+            });
+            
+            // Generate insights based on lowest and highest scoring categories
+            generateInsights(categoryScores);
+        }
+        
+        function generateInsights(categoryScores) {
+            const insightsContainer = document.getElementById('keyInsights');
+            insightsContainer.innerHTML = '';
+            
+            // Find lowest and highest scoring categories
+            let lowestCategory = null;
+            let lowestScore = 100;
+            let highestCategory = null;
+            let highestScore = 0;
+            
+            Object.keys(categoryScores).forEach(category => {
+                const { percentage } = categoryScores[category];
+                
+                if (percentage < lowestScore) {
+                    lowestScore = percentage;
+                    lowestCategory = category;
+                }
+                
+                if (percentage > highestScore) {
+                    highestScore = percentage;
+                    highestCategory = category;
+                }
+            });
+            
+            // Generate specific insights based on categories
+            const insights = [];
+            
+            // Add strength insight
+            insights.push({
+                type: 'strength',
+                icon: '✅',
+                title: `Strong ${highestCategory}`,
+                text: getStrengthInsight(highestCategory)
+            });
+            
+            // Add weakness insight
+            insights.push({
+                type: 'weakness',
+                icon: '⚠️',
+                title: `Improve Your ${lowestCategory}`,
+                text: getWeaknessInsight(lowestCategory)
+            });
+            
+            // Add general insight based on overall score
+            const score = calculateScore();
+            if (score >= 80) {
+                insights.push({
+                    type: 'action',
+                    icon: '🚀',
+                    title: 'Next Steps',
+                    text: 'Start reaching out to investors with your pitch. Your fundability score suggests you\'re ready for serious conversations.'
+                });
+            } else if (score >= 60) {
+                insights.push({
+                    type: 'action',
+                    icon: '🔍',
+                    title: 'Next Steps',
+                    text: 'Focus on addressing your weak areas while preparing your investor outreach strategy. You\'re close to being highly fundable.'
+                });
+            } else {
+                insights.push({
+                    type: 'action',
+                    icon: '🛠️',
+                    title: 'Next Steps',
+                    text: 'Consider alternative funding sources while you build more traction and strengthen your fundamentals. Revisit fundraising in 3-6 months.'
+                });
+            }
+            
+            // Display insights
+            insights.forEach(insight => {
+                const insightElement = document.createElement('div');
+                insightElement.className = `p-4 rounded-lg ${insight.type === 'strength' ? 'bg-green-50 border border-green-100' : insight.type === 'weakness' ? 'bg-yellow-50 border border-yellow-100' : 'bg-blue-50 border border-blue-100'}`;
+                insightElement.innerHTML = `
+                    <div class="flex items-start">
+                        <span class="text-xl mr-3">${insight.icon}</span>
+                        <div>
+                            <h5 class="font-semibold text-gray-800 mb-1">${insight.title}</h5>
+                            <p class="text-gray-600">${insight.text}</p>
+                        </div>
+                    </div>
+                `;
+                
+                insightsContainer.appendChild(insightElement);
+            });
+        }
+        
+        function getStrengthInsight(category) {
+            switch (category) {
+                case 'Team & Founder History':
+                    return 'Your strong founding team is a major asset. Investors value experienced teams with complementary skills.';
+                case 'Market Opportunity':
+                    return 'Your market positioning is compelling. Highlight your TAM and growth potential prominently in your pitch.';
+                case 'Traction & Revenue':
+                    return 'Your traction metrics are impressive. Use these numbers to demonstrate product-market fit to investors.';
+                case 'Financials & Burn':
+                    return 'Your financial management shows discipline. This will give investors confidence in your ability to use capital efficiently.';
+                case 'Fundraising Readiness':
+                    return 'You\'re well-prepared for the fundraising process. Your materials and network position you for successful investor conversations.';
+                default:
+                    return 'You have significant strengths that make your startup attractive to investors.';
+            }
+        }
+        
+        function getWeaknessInsight(category) {
+            switch (category) {
+                case 'Team & Founder History':
+                    return 'Consider strengthening your team with strategic advisors or co-founders who bring complementary skills and experience.';
+                case 'Market Opportunity':
+                    return 'Work on better articulating your market size and competitive advantage. Investors need to see the big picture potential.';
+                case 'Traction & Revenue':
+                    return 'Focus on accelerating your growth metrics and customer acquisition before approaching investors.';
+                case 'Financials & Burn':
+                    return 'Improve your financial planning and extend your runway. Investors want to see disciplined capital management.';
+                case 'Fundraising Readiness':
+                    return 'Develop a more comprehensive fundraising strategy with better materials and warm investor connections.';
+                default:
+                    return 'Address your key weaknesses before approaching investors to improve your chances of success.';
+            }
+        }
+        
+        function restartAssessment() {
+            // Reset state
+            currentCategoryIndex = 0;
+            currentQuestionIndex = 0;
+            answers = [];
+            
+            // Reset UI
+            resultsScreen.classList.add('hidden');
+            welcomeScreen.classList.remove('hidden');
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9405dcc8a492f02b',t:'MTc0NzM0NTk0Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
