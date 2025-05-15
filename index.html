@@ -249,6 +249,19 @@
             </div>
         </div>
     </div>
+    <script>
+  function postHeight() {
+    const height = document.documentElement.scrollHeight;
+    window.parent.postMessage({ type: "resize", height }, "*");
+  }
+
+  window.addEventListener("load", postHeight);
+  window.addEventListener("resize", postHeight);
+
+  // If your app has navigation (like a button that shows results), also call:
+  setInterval(postHeight, 300); // Re-check every 300ms
+</script>
+
     
     <script>
         // Questions Data Structure
